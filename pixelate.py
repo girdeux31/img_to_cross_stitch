@@ -8,19 +8,21 @@
 # c. resize image
 #
 # 1. take the spaced out pixels
-# 2. convert these pixels to dmc colours
+# 2. convert these pixels to dmc colors
 # 3. create a new smaller image with these pixels
-# 4. quantise the image with the required number of colours
+# 4. quantise the image with the required number of colors
 # 5. a new image can then be created with row x column of palette indices
 # 6. a new palette can then be created with the dmc 'objects'
 # 7. do any extra required cleaning up, for example removing isolated pixels
-# 8. svgs can be produced of black/white, colour with symbols, colour only patterns.
+# 8. svgs can be produced of black/white, color with symbols, color only patterns.
 # 9. generate the key table
 
 import sys
 from PIL import Image
 from DMC import DMC
 from SVG import SVG
+from pathlib import Path
+
 
 def get_neighbours(pos, matrix):
     rows = len(matrix)
@@ -30,60 +32,67 @@ def get_neighbours(pos, matrix):
         for j in range(max(0, pos[1] - width), min(cols, pos[1] + width + 1)):
             if not (i == pos[0] and j == pos[1]):
                 yield matrix[i][j]
-    
-# a
 
-if(len(sys.argv)<3):
-    print("function requires an input filename, number of colours, stitch count and mode")
-    sys.exit(0)
+if __name__ == '__main__':
 
-input_file_name = sys.argv[1]       # input file name, has to be a jpg
-num_colours = int(sys.argv[2])      # number of colours to use in the pattern
-count = int(sys.argv[3])            # stitch count, number of stitches in x axis
+    # process arguments
 
-# black_white, minor, symbols    
-    
-col_sym = SVG(False, True, True)
-blw_nsy = SVG(True, True, True)
-col_nsy = SVG(False, False, False)
-key = SVG(False, True, True)
+    if(len(sys.argv)<3):
+        print("function requires an input filename, number of colors, stitch count and mode")
+        sys.exit(0)
 
-# b
+    input_file = Path(sys.argv[1])       # input file name, has to be a jpg
+    n_colors = int(sys.argv[2])    # number of colors to use in the pattern
+    n_squares = int(sys.argv[3])   # stitch count, number of stitches in x axis
 
-im = Image.open(input_file_name)
+    if not input_file.exists():
+        raise FileNotFoundError(f'File \'{input_file}\' not found')
 
-# c
+    # init svg objects
+        
+    svg_rgb_sym = SVG(False, True, True)
+    svg_bw = SVG(True, True, True)
+    svg_rgb = SVG(False, False, False)
+    svg_legend = SVG(False, True, True)
 
-new_width  = 1000
-pixelSize = int(new_width / int(count))
-new_height = new_width * im.size[1] / im.size[0]
-im = im.resize((new_width, new_height), Image.NEAREST)
+    # read and resize image
 
-# 1, 2
+    img = Image.open(input_file).convert('RGB')  # make sure to read it in RGM mode
+    new_width  = 1000
+    pixel_size = int(new_width / int(n_squares))
+    new_height = int(new_width * img.size[1] / img.size[0])
+    img = img.resize((new_width, new_height), Image.NEAREST)
 
-d = DMC()
-dmc_spaced = [[d.get_dmc_rgb_triple(im.getpixel((x, y))) for x in range(0, im.size[0], pixelSize)] for y in range(0, im.size[1], pixelSize)]
+    # get 2d list with DMC colors (each element is a RGB tuple)
 
-# 3
+    dmc = DMC()
+    dmc_spaced = [
+        [
+            dmc.get_dmc_rgb_triplet(img.getpixel((x, y))) 
+            for x in range(0, img.size[0], pixel_size)
+        ]
+        for y in range(0, img.size[1], pixel_size)
+    ]
 
-dmc_image = Image.new('RGB', (len(dmc_spaced[0]), len(dmc_spaced))) #h, w
-dmc_image.putdata([value for row in dmc_spaced for value in row])
+    # create a new image with previous RGB colors
 
-# 4, 5
+    dmc_image = Image.new('RGB', (len(dmc_spaced[0]), len(dmc_spaced))) #h, w
+    dmc_image.putdata([value for row in dmc_spaced for value in row])
 
-dmc_image = dmc_image.convert('P', palette=Image.ADAPTIVE, colors = num_colours)
-x_count = dmc_image.size[0]
-y_count = dmc_image.size[1]
-svg_pattern = [[dmc_image.getpixel((x, y)) for x in range(x_count)] for y in range(y_count)]
+    # quantize the image with the required number of colors
 
-# 6
+    dmc_image = dmc_image.convert('P', palette=Image.ADAPTIVE, colors = n_colors)
+    x_count = dmc_image.size[0]
+    y_count = dmc_image.size[1]
+    svg_pattern = [[dmc_image.getpixel((x, y)) for x in range(x_count)] for y in range(y_count)]
 
-palette = dmc_image.getpalette()
-svg_palette = [d.get_colour_code_corrected((palette[i * 3], palette[i * 3 + 1], palette[i * 3 + 2])) for i in range(num_colours)]
+    # get image palette (list of colors)
 
-# 7
+    palette = dmc_image.getpalette()
+    svg_palette = [dmc.get_color_code_corrected((palette[i * 3], palette[i * 3 + 1], palette[i * 3 + 2])) for i in range(n_colors)]
 
-if True:
+    # remove isolated pixels with a local color average
+
     for x in range(0, x_count):
         for y in range(0, y_count):
             gen = get_neighbours([y, x], svg_pattern)
@@ -94,39 +103,49 @@ if True:
                 mode = max(neighbours, key=neighbours.count)
                 svg_pattern[y][x] = mode
 
-# 8
+    # create images:
+    #  - B&W wo symbols
+    #  - RGB w symbols
+    #  - RGB wo symbols
+    # then, extra features are added:
+    #  - midpoint arrows
+    #  - major and minor grids
+    #  - symbols
 
-svg_cell_size = 10
-width = x_count * svg_cell_size
-height = y_count * svg_cell_size
-col_sym.prep_for_drawing(width, height)
-col_sym.mid_arrows(svg_cell_size, width, height)
-blw_nsy.prep_for_drawing(width, height)
-blw_nsy.mid_arrows(svg_cell_size, width, height)
-col_nsy.prep_for_drawing(width, height)
-x = y = svg_cell_size # to allow drawing of midpoint arrows
-for row in svg_pattern:
-    for colour_index in row:
-        col_sym.add_rect(svg_palette, colour_index, x, y, svg_cell_size)
-        blw_nsy.add_rect(svg_palette, colour_index, x, y, svg_cell_size)
-        col_nsy.add_rect(svg_palette, colour_index, x, y, svg_cell_size)
-        x += svg_cell_size
-    y += svg_cell_size
-    x = svg_cell_size
-blw_nsy.major_gridlines(svg_cell_size, width, height)
-col_sym.major_gridlines(svg_cell_size, width, height)
+    svg_cell_size = 10
+    width = x_count * svg_cell_size
+    height = y_count * svg_cell_size
+    svg_rgb_sym.init_svg(width, height)
+    svg_rgb_sym.add_arrows(svg_cell_size, width, height)
+    svg_bw.init_svg(width, height)
+    svg_bw.add_arrows(svg_cell_size, width, height)
+    svg_rgb.init_svg(width, height)
+    x = y = svg_cell_size # to allow drawing of midpoint arrows
+    for row in svg_pattern:
+        for color_index in row:
+            svg_rgb_sym.add_rect(svg_palette, color_index, x, y, svg_cell_size)
+            svg_bw.add_rect(svg_palette, color_index, x, y, svg_cell_size)
+            svg_rgb.add_rect(svg_palette, color_index, x, y, svg_cell_size)
+            x += svg_cell_size
+        y += svg_cell_size
+        x = svg_cell_size
+    svg_bw.add_major_gridlines(svg_cell_size, width, height)
+    svg_rgb_sym.add_major_gridlines(svg_cell_size, width, height)
 
-# 9
+    # generate the legend image
 
-size = 40
-key.prep_for_drawing(size * 13, size * len(svg_palette))
-x = y = 0
-for i in range(len(svg_palette)):
-    key.add_key_colour(x, y, size, i, svg_palette[i])
-    y += size
+    size = 40
+    svg_legend.init_svg(size * 13, size * len(svg_palette))
+    x = y = 0
+    for i in range(len(svg_palette)):
+        svg_legend.add_key_color(x, y, size, i, svg_palette[i])
+        y += size
 
-col_sym.save('col_sym.svg')
-blw_nsy.save('blw_sym.svg')
-col_nsy.save('col_nsy.svg')
-key.save('key.svg')
+    # save all images
 
+    out_path = input_file.parent
+    out_name = input_file.stem
+    svg_rgb_sym.save(out_path / f'{out_name}_rgb_sym.svg')
+    svg_bw.save(out_path / f'{out_name}_bw.svg')
+    svg_rgb.save(out_path / f'{out_name}_rgb.svg')
+    svg_legend.save(out_path / f'{out_name}_legend.svg')
