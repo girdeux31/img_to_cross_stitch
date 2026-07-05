@@ -1,22 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-# algorithm
-#
-# a. process options
-# b. open image
-# c. resize image
-#
-# 1. take the spaced out pixels
-# 2. convert these pixels to dmc colors
-# 3. create a new smaller image with these pixels
-# 4. quantise the image with the required number of colors
-# 5. a new image can then be created with row x column of palette indices
-# 6. a new palette can then be created with the dmc 'objects'
-# 7. do any extra required cleaning up, for example removing isolated pixels
-# 8. svgs can be produced of black/white, color with symbols, color only patterns.
-# 9. generate the key table
-
 import sys
 from PIL import Image
 from DMC import DMC
@@ -37,13 +18,18 @@ if __name__ == '__main__':
 
     # process arguments
 
-    if(len(sys.argv)<3):
-        print("function requires an input filename, number of colors, stitch count and mode")
-        sys.exit(0)
+    # if(len(sys.argv)<3):
+    #     print("function requires an input filename, number of colors, stitch count and mode")
+    #     sys.exit(0)
 
-    input_file = Path(sys.argv[1])       # input file name, has to be a jpg
-    n_colors = int(sys.argv[2])    # number of colors to use in the pattern
-    n_squares = int(sys.argv[3])   # stitch count, number of stitches in x axis
+    # input_file = Path(sys.argv[1])       # input file name, has to be a jpg
+    # n_colors = int(sys.argv[2])    # number of colors to use in the pattern
+    # n_squares = int(sys.argv[3])   # stitch count, number of stitches in x axis
+
+    # Just for debugging
+    input_file = Path('examples/bird.jpg')
+    n_colors = 3
+    n_squares = 50
 
     if not input_file.exists():
         raise FileNotFoundError(f'File \'{input_file}\' not found')
@@ -68,7 +54,7 @@ if __name__ == '__main__':
     dmc = DMC()
     dmc_spaced = [
         [
-            dmc.get_dmc_rgb_triplet(img.getpixel((x, y))) 
+            dmc.get_most_similar_rgb_by_rgb(img.getpixel((x, y))) 
             for x in range(0, img.size[0], pixel_size)
         ]
         for y in range(0, img.size[1], pixel_size)
@@ -81,15 +67,26 @@ if __name__ == '__main__':
 
     # quantize the image with the required number of colors
 
-    dmc_image = dmc_image.convert('P', palette=Image.ADAPTIVE, colors = n_colors)
+    dmc_image = dmc_image.convert('P', palette=Image.ADAPTIVE, colors=n_colors)
     x_count = dmc_image.size[0]
     y_count = dmc_image.size[1]
     svg_pattern = [[dmc_image.getpixel((x, y)) for x in range(x_count)] for y in range(y_count)]
 
     # get image palette (list of colors)
 
+    palette_list = []
     palette = dmc_image.getpalette()
-    svg_palette = [dmc.get_color_code_corrected((palette[i * 3], palette[i * 3 + 1], palette[i * 3 + 2])) for i in range(n_colors)]
+    for idx in range(n_colors):
+        rgb = tuple(palette[idx*3:idx*3+3])
+        code = dmc.get_most_similar_code_by_rgb(rgb, corrected=True)
+        name = dmc.get_color_name_by_code(code)
+        palette_list.append(
+            {
+                'rgb': rgb,
+                'code': code,
+                'name': name,
+            }
+        )
 
     # remove isolated pixels with a local color average
 
@@ -122,10 +119,10 @@ if __name__ == '__main__':
     svg_rgb.init_svg(width, height)
     x = y = svg_cell_size # to allow drawing of midpoint arrows
     for row in svg_pattern:
-        for color_index in row:
-            svg_rgb_sym.add_rect(svg_palette, color_index, x, y, svg_cell_size)
-            svg_bw.add_rect(svg_palette, color_index, x, y, svg_cell_size)
-            svg_rgb.add_rect(svg_palette, color_index, x, y, svg_cell_size)
+        for c_idx in row:
+            svg_rgb_sym.add_rect(palette_list, c_idx, x, y, svg_cell_size)
+            svg_bw.add_rect(palette_list, c_idx, x, y, svg_cell_size)
+            svg_rgb.add_rect(palette_list, c_idx, x, y, svg_cell_size)
             x += svg_cell_size
         y += svg_cell_size
         x = svg_cell_size
@@ -135,10 +132,10 @@ if __name__ == '__main__':
     # generate the legend image
 
     size = 40
-    svg_legend.init_svg(size * 13, size * len(svg_palette))
-    x = y = 0
-    for i in range(len(svg_palette)):
-        svg_legend.add_key_color(x, y, size, i, svg_palette[i])
+    svg_legend.init_svg(size*13, size*n_colors)
+    y = 0
+    for idx in range(n_colors):
+        svg_legend.add_key_color(y, size, idx, palette_list[idx])
         y += size
 
     # save all images
