@@ -1,9 +1,22 @@
 import sys
+import cairosvg
 from PIL import Image
 from DMC import DMC
 from SVG import SVG
 from pathlib import Path
 
+
+def svg_to_png(svg_file: Path):
+    """Read svg file and save it as png"""
+    if not svg_file.exists():
+        raise FileNotFoundError(f'File \'{svg_file}\' not found')
+    
+    png_file = svg_file.with_suffix('.png')
+    with open(svg_file, "rb") as f:
+        svg_bytes = f.read()
+    png_bytes = cairosvg.svg2png(bytestring=svg_bytes)
+    with open(png_file, 'wb') as f:
+        f.write(png_bytes)
 
 def get_neighbours(pos, matrix):
     rows = len(matrix)
@@ -146,3 +159,4 @@ if __name__ == '__main__':
     svg_bw.save(out_path / f'{out_name}_bw.svg')
     svg_rgb.save(out_path / f'{out_name}_rgb.svg')
     svg_legend.save(out_path / f'{out_name}_legend.svg')
+    svg_to_png(out_path / f'{out_name}_rgb_sym.svg')
