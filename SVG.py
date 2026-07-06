@@ -15,16 +15,16 @@ class SVG:
     }
     font_size = '20px'
     font_color = 'black'
-    symbol_color = '#000000'
+    symbol_color = 'black'
     symbol_width = 1
     arrow_color = 'black'
     arrow_width = 2
     arrow_fill = 'none'
     major_grid_color = 'black'
     major_grid_width = 2
-    minor_grid_rgb = '20,20,20'
+    minor_grid_color = 'rgb(20,20,20)'
     minor_grid_width = 1
-    legend_fill_color = '255,255,255'
+    legend_fill_color = 'white'
     legend_stroke_color = 'black'
     legend_stroke_width = 1
     svg_fill = 'none'
@@ -44,10 +44,6 @@ class SVG:
         for style_arg, style_value in style_dict.items():
             xml_code += f'{style_arg}:{style_value};'
         xml_code += '"/>'
-        self._write_xml_line(xml_code)
-
-    def _add_xml_text(self, x: int | float, y: int | float, fill: str, text: str) -> None:
-        xml_code = f'<text x="{x}" y="{y}" fill="{fill}">{text}</text>'
         self._write_xml_line(xml_code)
 
     def _add_xml_header(
@@ -88,10 +84,10 @@ class SVG:
         self._write_xml_line(xml_code)
 
     def _add_xml_text(self, x: int | float, y: int | float, style_dict: dict[str, str], text: str) -> None:
-        xml_code = f'<text x="{x}" y="{y}" >'
+        xml_code = f'<text x="{x}" y="{y}"'
         for style_arg, style_value in style_dict.items():
             xml_code += f' {style_arg}="{style_value}"'
-        xml_code += f'{text}</text>'
+        xml_code += f'>{text}</text>'
         self._write_xml_line(xml_code)
 
     def _add_xml_line(self, x1: int | float, y1: int | float, x2: int | float, y2: int | float, style_dict: dict[str, str]) -> None:
@@ -106,7 +102,7 @@ class SVG:
         r, g, b = palette[idx]['rgb'] if self.color else (255, 255, 255)
         style = {
             'fill': f'rgb({r},{g},{b})',
-            'stroke': f'rgb({self.minor_grid_rgb})',
+            'stroke': self.minor_grid_color,
             'stroke-width': self.minor_grid_width,
         }
         self._add_xml_rect(x, y, size, size, style)
@@ -160,11 +156,11 @@ class SVG:
 
     def add_legend(self, y: int, size: int, idx: int, color: dict[str, tuple | str]):
         x = 0
-        r, g, b = color['rgb'] if self.color else (255, 255, 255)
         # symbol
+        r, g, b = color['rgb'] if self.color else (255, 255, 255)
         style = {
             'fill': f'rgb({r},{g},{b})',
-            'stroke': f'rgb({self.minor_grid_rgb})',
+            'stroke': self.minor_grid_color,
             'stroke-width': self.minor_grid_width,
         }
         self._add_xml_rect(x, y, size, size, style)
@@ -172,18 +168,18 @@ class SVG:
             self._add_xml_symbol(idx, x, y, size)
         # color name
         rect_style = {
-            'fill': f'rgb({self.legend_fill_color})',
-            'stroke': f'rgb({self.legend_stroke_color})',
+            'fill': self.legend_fill_color,
+            'stroke': self.legend_stroke_color,
             'stroke-width': self.legend_stroke_width,
         }
         text_style = {
             'fill': self.font_color,
         }
         self._add_xml_rect(size, y, 10*size, size, rect_style)
-        self._add_xml_text(x + 1.5*size, y + size/2.0, text_style, color["name"])
+        self._add_xml_text(x + 1.5*size, y + size/2.0, text_style, color['name'])
         # color code
         self._add_xml_rect(11*size, y, 2*size, size, rect_style)
-        self._add_xml_text(11.5*size, y + size/2.0, text_style, color["code"])
+        self._add_xml_text(11.5*size, y + size/2.0, text_style, color['code'])
         
     def save(self, filename):
         self._write_xml_line('</svg>')
