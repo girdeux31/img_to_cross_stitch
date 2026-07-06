@@ -1,3 +1,6 @@
+from pathlib import Path
+
+
 class SVG:
     
     idx_to_code = {
@@ -36,7 +39,7 @@ class SVG:
         self.xml = ''
 
     def _write_xml_line(self, xml: str, indent: int=0) -> None:
-        """Add xml code to string"""
+        """Add xml code as string"""
         self.xml += indent*'\t' + xml + '\n'
 
     def _add_xml_rect(
@@ -47,6 +50,7 @@ class SVG:
         height: int | float,
         style_dict: dict[str, str]
     ) -> None:
+        """Add xml rect tag"""
         xml_code = f'<rect x="{x}" y="{y}" width="{width}" height="{height}" style="'
         for style_arg, style_value in style_dict.items():
             xml_code += f'{style_arg}:{style_value};'
@@ -59,6 +63,7 @@ class SVG:
         height: int | float,
         style_dict: dict[str, dict[str, str]],
     ) -> None:
+        """Add xml svg tag"""
         xml_code = f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" style="'
         for style_arg, style_value in style_dict.items():
             xml_code += f'{style_arg}:{style_value};'
@@ -66,6 +71,7 @@ class SVG:
         self._write_xml_line(xml_code)
 
     def _add_xml_style(self, class_dict: dict[str, dict[str, str]]) -> None:
+        """Add xml style tag"""
         xml_code = '<style>'
         for class_name, class_style in class_dict.items():
             xml_code += f'.{class_name}{{'
@@ -76,6 +82,7 @@ class SVG:
         self._write_xml_line(xml_code, indent=1)
 
     def _add_xml_path(self, code: str, style_dict: dict[str, str], transform: str) -> None:
+        """Add xml path tag"""
         xml_code = f'<path d="{code}"'
         for style_arg, style_value in style_dict.items():
             xml_code += f' {style_arg}="{style_value}"'
@@ -91,6 +98,7 @@ class SVG:
         self._write_xml_line(xml_code, indent=1)
 
     def _add_xml_text(self, x: int | float, y: int | float, style_dict: dict[str, str], text: str) -> None:
+        """Add xml text tag"""
         xml_code = f'<text x="{x}" y="{y}"'
         for style_arg, style_value in style_dict.items():
             xml_code += f' {style_arg}="{style_value}"'
@@ -98,6 +106,7 @@ class SVG:
         self._write_xml_line(xml_code, indent=1)
 
     def _add_xml_line(self, x1: int | float, y1: int | float, x2: int | float, y2: int | float, style_dict: dict[str, str]) -> None:
+        """Add xml line tag"""
         xml_code = f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" style="'
         for style_arg, style_value in style_dict.items():
             xml_code += f'{style_arg}:{style_value};'
@@ -119,6 +128,7 @@ class SVG:
             self._add_xml_symbol(idx, x, y, size)
         
     def add_header(self, width: int, height: int) -> None:
+        """Add svg header"""
         style = {
             'fill': self.svg_fill,
         }
@@ -135,6 +145,7 @@ class SVG:
         self._add_xml_style(classes)
     
     def add_arrows(self, size: int, width: int, height: int) -> None:
+        """Add midpoint arrows"""
         h = str(size/2)
         f = str(size)
         style = {
@@ -157,6 +168,7 @@ class SVG:
         self._add_major_gridlines(size, width, height)
 
     def _add_major_gridlines(self, size: int, width: int, height: int) -> None:
+        """Add major gridlines"""
         style = {
             'stroke': self.major_grid_color,
             'stroke-width': self.major_grid_width,
@@ -167,6 +179,7 @@ class SVG:
             self._add_xml_line(size, y, width, y, style)
 
     def _add_minor_gridlines(self, size: int, width: int, height: int) -> None:
+        """Add minor gridlines"""
         style = {
             'stroke': self.minor_grid_color,
             'stroke-width': self.minor_grid_width,
@@ -177,6 +190,7 @@ class SVG:
             self._add_xml_line(size, y, width, y, style)
 
     def add_legend(self, y: int, size: int, idx: int, color: dict[str, tuple | str]):
+        """Add legend"""
         x = 0
         # symbol
         r, g, b = color['rgb'] if self.color else (255, 255, 255)
@@ -203,7 +217,8 @@ class SVG:
         self._add_xml_rect(11*size, y, 2*size, size, rect_style)
         self._add_xml_text(11.5*size, y + size/2.0, text_style, color['code'])
         
-    def save(self, filename):
+    def save(self, filename: Path) -> None:
+        """Save as svg file"""
         self._write_xml_line('</svg>')
         f = open(filename,'w')
         f.write(self.xml)
