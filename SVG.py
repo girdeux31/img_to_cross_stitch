@@ -37,14 +37,21 @@ class SVG:
 
     def _write_xml_line(self, xml: str, indent: int=0) -> None:
         """Add xml code to string"""
-        self.xml += xml + '\n'  # TODO add indent
+        self.xml += indent*'\t' + xml + '\n'
 
-    def _add_xml_rect(self, x: int | float, y: int | float, width: int | float, height: int | float, style_dict: dict[str, str]) -> None:
+    def _add_xml_rect(
+        self,
+        x: int | float,
+        y: int | float,
+        width: int | float,
+        height: int | float,
+        style_dict: dict[str, str]
+    ) -> None:
         xml_code = f'<rect x="{x}" y="{y}" width="{width}" height="{height}" style="'
         for style_arg, style_value in style_dict.items():
             xml_code += f'{style_arg}:{style_value};'
         xml_code += '"/>'
-        self._write_xml_line(xml_code)
+        self._write_xml_line(xml_code, indent=1)
 
     def _add_xml_header(
         self,
@@ -66,14 +73,14 @@ class SVG:
                 xml_code += f'{style_arg}:{style_value};'
             xml_code += '}'
         xml_code += '</style>'
-        self._write_xml_line(xml_code)
+        self._write_xml_line(xml_code, indent=1)
 
     def _add_xml_path(self, code: str, style_dict: dict[str, str], transform: str) -> None:
         xml_code = f'<path d="{code}"'
         for style_arg, style_value in style_dict.items():
             xml_code += f' {style_arg}="{style_value}"'
         xml_code += f" transform='{transform}'/>"
-        self._write_xml_line(xml_code)
+        self._write_xml_line(xml_code, indent=1)
 
     def _add_xml_symbol(self, idx: int, x: int | float, y: int | float, size: int) -> str:
         """Add xml symbol according to idx value, position (x, y) and size"""
@@ -81,21 +88,21 @@ class SVG:
         xml_code = "<path class='glyph' d='"
         xml_code += self.idx_to_code[idx] if idx in self.idx_to_code else ''
         xml_code += f"' transform='translate({x} {y}) scale({scale})'/>"
-        self._write_xml_line(xml_code)
+        self._write_xml_line(xml_code, indent=1)
 
     def _add_xml_text(self, x: int | float, y: int | float, style_dict: dict[str, str], text: str) -> None:
         xml_code = f'<text x="{x}" y="{y}"'
         for style_arg, style_value in style_dict.items():
             xml_code += f' {style_arg}="{style_value}"'
         xml_code += f'>{text}</text>'
-        self._write_xml_line(xml_code)
+        self._write_xml_line(xml_code, indent=1)
 
     def _add_xml_line(self, x1: int | float, y1: int | float, x2: int | float, y2: int | float, style_dict: dict[str, str]) -> None:
         xml_code = f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" style="'
         for style_arg, style_value in style_dict.items():
             xml_code += f'{style_arg}:{style_value};'
         xml_code += '"/>'
-        self._write_xml_line(xml_code)
+        self._write_xml_line(xml_code, indent=1)
 
     def add_color(self, palette: list[dict[str, tuple | str]], idx: int, x: int, y: int, size: int) -> None:
         """Add colors as "pixels" """
