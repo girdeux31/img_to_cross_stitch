@@ -49,10 +49,9 @@ if __name__ == '__main__':
 
     # init svg objects
         
-    svg_rgb_sym = SVG(False, True, True)
-    svg_bw = SVG(True, True, True)
-    svg_rgb = SVG(False, False, False)
-    svg_legend = SVG(False, True, True)
+    svg_rgb = SVG(color=True)
+    svg_bw = SVG(color=False)
+    svg_legend = SVG(color=True)
 
     # read and resize image
 
@@ -125,38 +124,35 @@ if __name__ == '__main__':
     svg_cell_size = 10
     width = x_count * svg_cell_size
     height = y_count * svg_cell_size
-    svg_rgb_sym.init_svg(width, height)
-    svg_rgb_sym.add_arrows(svg_cell_size, width, height)
-    svg_bw.init_svg(width, height)
+    svg_rgb.add_header(width, height)
+    svg_rgb.add_arrows(svg_cell_size, width, height)
+    svg_bw.add_header(width, height)
     svg_bw.add_arrows(svg_cell_size, width, height)
-    svg_rgb.init_svg(width, height)
     x = y = svg_cell_size # to allow drawing of midpoint arrows
     for row in svg_pattern:
         for c_idx in row:
-            svg_rgb_sym.add_rect(palette_list, c_idx, x, y, svg_cell_size)
-            svg_bw.add_rect(palette_list, c_idx, x, y, svg_cell_size)
-            svg_rgb.add_rect(palette_list, c_idx, x, y, svg_cell_size)
+            svg_rgb.add_square_and_symbol(palette_list, c_idx, x, y, svg_cell_size)
+            svg_bw.add_square_and_symbol(palette_list, c_idx, x, y, svg_cell_size)
             x += svg_cell_size
         y += svg_cell_size
         x = svg_cell_size
     svg_bw.add_major_gridlines(svg_cell_size, width, height)
-    svg_rgb_sym.add_major_gridlines(svg_cell_size, width, height)
+    svg_rgb.add_major_gridlines(svg_cell_size, width, height)
 
     # generate the legend image
 
     size = 40
-    svg_legend.init_svg(size*13, size*n_colors)
+    svg_legend.add_header(size*13, size*n_colors)
     y = 0
     for idx in range(n_colors):
-        svg_legend.add_key_color(y, size, idx, palette_list[idx])
+        svg_legend.add_legend(y, size, idx, palette_list[idx])
         y += size
 
     # save all images
 
     out_path = input_file.parent
     out_name = input_file.stem
-    svg_rgb_sym.save(out_path / f'{out_name}_rgb_sym.svg')
-    svg_bw.save(out_path / f'{out_name}_bw.svg')
     svg_rgb.save(out_path / f'{out_name}_rgb.svg')
+    svg_bw.save(out_path / f'{out_name}_bw.svg')
     svg_legend.save(out_path / f'{out_name}_legend.svg')
-    svg_to_png(out_path / f'{out_name}_rgb_sym.svg')
+    svg_to_png(out_path / f'{out_name}_rgb.svg')

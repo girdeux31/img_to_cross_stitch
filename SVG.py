@@ -1,90 +1,192 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 class SVG:
     
-    xml = ''
+    idx_to_code = {
+        0: "M4 4L16 16", # backslash
+        1: "M4 16L16 4M4 10L 16 10", # forward slash
+        2: "M7 7L7 13 13 13 13 7Z' fill='black", # little square, filled black
+        3: "M4 4L10 16L16 4 Z", # triangle, upside down
+        4: "M4 4L16 16M4 16 L16 4", # diagonal cross
+        5: "M4 4L4 16 16 16 16 4Z", # square
+        6: "M4 4L10 16L16 4 Z' fill='black", # triangle, upside down, filled black
+        7: "M10 4L6 10 10 16 14 10Z' fill='black", # diamond, filled black
+        8: "M8 8L8 12 12 12 12 8Z", # little square
+        9: "M4 4L16 16M4 16 L16 4M10 4L10 16M4 10L16 10", # 8 way cross
+        10: "M4 4L4 16 16 16 16 4Z' fill='black", # square, filled black
+    }
+    font_size = '20px'
+    font_color = 'black'
+    symbol_color = '#000000'
+    symbol_width = 1
+    arrow_color = 'black'
+    arrow_width = 2
+    arrow_fill = 'none'
+    major_grid_color = 'black'
+    major_grid_width = 2
+    minor_grid_rgb = '20,20,20'
+    minor_grid_width = 1
+    legend_fill_color = '255,255,255'
+    legend_stroke_color = 'black'
+    legend_stroke_width = 1
+    svg_fill = 'none'
     
-    def __init__(self, black_white = False, minor_lines = False, symbols = True):
-        self.black_white = black_white
-        self.minor_lines = minor_lines
+    def __init__(self, color: bool=True, symbols: bool=True):
+        """Init object"""
+        self.color = color
         self.symbols = symbols
-        
-    def get_rgb_from_dmc_item(self, item):
-        return 'rgb('+str(item[0])+','+str(item[1])+','+str(item[2])+');'
+        self.xml = ''
 
-    def gen_glyph(self, idx, x, y, size = 1):
-        x = str(x)
-        y = str(y)
-        scale = 'scale(' + str(size) + ')'
-        if idx == 0:
-            return "<path class='glyph' d='M4 4L16 16' transform='translate("+x+" "+y+") "+scale+"'/>" # backslash
-        elif idx == 1:
-            return "<path class='glyph' d='M4 16L16 4M4 10L 16 10' transform='translate("+x+" "+y+") "+scale+"'/>" # forward slash
-        elif idx == 2:
-            return "<path class='glyph' d='M7 7L7 13 13 13 13 7Z' fill='black' transform='translate("+x+" "+y+") "+scale+"'/>" # little square, filled black
-        elif idx == 3:
-            return "<path class='glyph' d='M4 4L10 16L16 4 Z' transform='translate("+x+" "+y+") "+scale+"'/>" # triangle, upside down
-        elif idx == 4:
-            return "<path class='glyph' d='M4 4L16 16M4 16 L16 4' transform='translate("+x+" "+y+") "+scale+"'/>" # diagonal cross
-        elif idx == 5:
-            return "<path class='glyph' d='M4 4L4 16 16 16 16 4Z' transform='translate("+x+" "+y+") "+scale+"'/>" # square
-        elif idx == 6:
-            return "<path class='glyph' d='M4 4L10 16L16 4 Z' fill='black' transform='translate("+x+" "+y+") "+scale+"'/>" # triangle, upside down, filled black
-        elif idx == 7:
-            return "<path class='glyph' d='M10 4L6 10 10 16 14 10Z' fill='black' transform='translate("+x+" "+y+") "+scale+"'/>" # diamond, filled black
-        elif idx == 8:
-            return "<path class='glyph' d='M8 8L8 12 12 12 12 8Z' transform='translate("+x+" "+y+") "+scale+"'/>" # little square
-        elif idx == 9:
-            return "<path class='glyph' d='M4 4L16 16M4 16 L16 4M10 4L10 16M4 10L16 10' transform='translate("+x+" "+y+") "+scale+"'/>" # 8 way cross
-        elif idx == 10:
-            return "<path class='glyph' d='M4 4L4 16 16 16 16 4Z' fill='black' transform='translate("+x+" "+y+") "+scale+"'/>" # square, filled black
-        else:
-            return ''
+    def _write_xml_line(self, xml: str, indent: int=0) -> None:
+        """Add xml code to string"""
+        self.xml += xml + '\n'  # TODO add indent
 
-    def add_rect(self, palette, idx, x, y, size):
-        glyph_scale = size / 20.0
-        fill = 'fill:rgb(255,255,255);' if self.black_white else 'fill:'+self.get_rgb_from_dmc_item(palette[idx]['rgb'])
-        stroke = 'stroke:rgb(20,20,20);stroke-width:1;' if self.minor_lines else 'stroke:none;'
-        sym = self.gen_glyph(idx, x, y, glyph_scale) if self.symbols else ''
-        self.xml += '<rect x="'+str(x)+'" y="'+str(y)+'" width="'+str(size)+'" height="'+str(size)+'" style="'+fill+stroke+'"/>' + sym
+    def _add_xml_rect(self, x: int | float, y: int | float, width: int | float, height: int | float, style_dict: dict[str, str]) -> None:
+        xml_code = f'<rect x="{x}" y="{y}" width="{width}" height="{height}" style="'
+        for style_arg, style_value in style_dict.items():
+            xml_code += f'{style_arg}:{style_value};'
+        xml_code += '"/>'
+        self._write_xml_line(xml_code)
+
+    def _add_xml_text(self, x: int | float, y: int | float, fill: str, text: str) -> None:
+        xml_code = f'<text x="{x}" y="{y}" fill="{fill}">{text}</text>'
+        self._write_xml_line(xml_code)
+
+    def _add_xml_header(
+        self,
+        width: int | float,
+        height: int | float,
+        style_dict: dict[str, dict[str, str]],
+    ) -> None:
+        xml_code = f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" style="'
+        for style_arg, style_value in style_dict.items():
+            xml_code += f'{style_arg}:{style_value};'
+        xml_code += '">'
+        self._write_xml_line(xml_code)
+
+    def _add_xml_style(self, class_dict: dict[str, dict[str, str]]) -> None:
+        xml_code = '<style>'
+        for class_name, class_style in class_dict.items():
+            xml_code += f'.{class_name}{{'
+            for style_arg, style_value in class_style.items():
+                xml_code += f'{style_arg}:{style_value};'
+            xml_code += '}'
+        xml_code += '</style>'
+        self._write_xml_line(xml_code)
+
+    def _add_xml_path(self, code: str, style_dict: dict[str, str], transform: str) -> None:
+        xml_code = f'<path d="{code}"'
+        for style_arg, style_value in style_dict.items():
+            xml_code += f' {style_arg}="{style_value}"'
+        xml_code += f" transform='{transform}'/>"
+        self._write_xml_line(xml_code)
+
+    def _add_xml_symbol(self, idx: int, x: int | float, y: int | float, size: int) -> str:
+        """Add xml symbol according to idx value, position (x, y) and size"""
+        scale = size / 20.0
+        xml_code = "<path class='glyph' d='"
+        xml_code += self.idx_to_code[idx] if idx in self.idx_to_code else ''
+        xml_code += f"' transform='translate({x} {y}) scale({scale})'/>"
+        self._write_xml_line(xml_code)
+
+    def _add_xml_text(self, x: int | float, y: int | float, style_dict: dict[str, str], text: str) -> None:
+        xml_code = f'<text x="{x}" y="{y}" >'
+        for style_arg, style_value in style_dict.items():
+            xml_code += f' {style_arg}="{style_value}"'
+        xml_code += f'{text}</text>'
+        self._write_xml_line(xml_code)
+
+    def _add_xml_line(self, x1: int | float, y1: int | float, x2: int | float, y2: int | float, style_dict: dict[str, str]) -> None:
+        xml_code = f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" style="'
+        for style_arg, style_value in style_dict.items():
+            xml_code += f'{style_arg}:{style_value};'
+        xml_code += '"/>'
+        self._write_xml_line(xml_code)
+
+    def add_square_and_symbol(self, palette: list[dict[str, tuple | str]], idx: int, x: int, y: int, size: int) -> None:
+        """Add xml square and a symbol inside"""
+        r, g, b = palette[idx]['rgb'] if self.color else (255, 255, 255)
+        style = {
+            'fill': f'rgb({r},{g},{b})',
+            'stroke': f'rgb({self.minor_grid_rgb})',
+            'stroke-width': self.minor_grid_width,
+        }
+        self._add_xml_rect(x, y, size, size, style)
+        if self.symbols:
+            self._add_xml_symbol(idx, x, y, size)
         
-    def init_svg(self, width, height):
-        self.xml += '<svg xmlns="http://www.w3.org/2000/svg" width="'+str(width)+'" height="'+str(height)+'" style ="fill:none;">'
-        self.xml += '<style>.svg_txt{font-size:20px;}.glyph{stroke:#000000;stroke-width:1;stroke:1;}</style>'
+    def add_header(self, width: int, height: int) -> None:
+        style = {
+            'fill': self.svg_fill,
+        }
+        classes = {
+            'svg_txt': {        # TODO: svg_txt not used
+                'font-size': self.font_size,
+            },
+            'glyph': {
+                'stroke': self.symbol_color,
+                'stroke-width': self.symbol_width,
+            }
+        }
+        self._add_xml_header(width, height, style)
+        self._add_xml_style(classes)
     
-    def add_arrows(self, size, width, height):
+    def add_arrows(self, size: int, width: int, height: int) -> None:
         h = str(size/2)
         f = str(size)
-        self.xml += "<path d=\"M0 "+h+"L"+f+" "+h+"M"+h+" 0L"+f+" "+h+" "+h+" "+f+"\" stroke=\"black\" stroke-width=\"2\" fill=\"none\" transform='translate(0 " + str(height/2) + ")'/>"
-        self.xml += "<path d=\"M"+h+" 0L"+h+" "+f+" M"+f+" "+h+"L"+h+" "+f+" 0 "+h+"\" stroke=\"black\" stroke-width=\"2\" fill=\"none\" transform='translate(" + str(width/2) + " 0)'/>"
+        style = {
+            'stroke': self.arrow_color,
+            'stroke-width': self.arrow_width,
+            'fill': self.arrow_fill,
+        }
+        # vertical arrow looking down
+        code = f'M0 {h}L{f} {h}M{h} 0L{f} {h} {h} {f}'
+        transform = f'translate(0 {height/2})'
+        self._add_xml_path(code, style, transform)
+        # horizontal arrow looking right
+        code = f'M{h} 0L{h} {f} M{f} {h}L{h} {f} 0 {h}'
+        transform = f'translate({width/2} 0)'
+        self._add_xml_path(code, style, transform)
     
-    def add_major_gridlines(self, size, width, height):
-        for x in range(size + size * 10, width, size * 10):
-            self.xml += "<line x1=\"" + str(x) + "\" y1=\"" + str(size) + "\" x2=\"" + str(x) + "\" y2=\"" + str(height) + "\" style=\"stroke:black;stroke-width:2\" />"
-        for y in range(size + size * 10, height, size * 10):
-            self.xml += "<line x1=\"" + str(size) + "\" y1=\"" + str(y) + "\" x2=\"" + str(width) + "\" y2=\"" + str(y) + "\" style=\"stroke:black;stroke-width:2\" />"
-            
-    def add_key_color(self, y, size, idx, color):
+    def add_major_gridlines(self, size: int, width: int, height: int) -> None:
+        for x in range(11*size, width, 10*size):
+            self._write_xml_line(
+                f'<line x1="{x}" y1="{size}" x2="{x}" y2="{height}" '
+                f'style="stroke:{self.major_grid_color};stroke-width:{self.major_grid_width}" />'
+            )
+        for y in range(11*size, height, 10*size):
+            self._write_xml_line(
+                f'<line x1="{size}" y1="{y}" x2="{width}" y2="{y}" '
+                f'style="stroke:{self.major_grid_color};stroke-width:{self.major_grid_width}" />'
+            )
+
+    def add_legend(self, y: int, size: int, idx: int, color: dict[str, tuple | str]):
         x = 0
-        color_rgb = color['rgb']
-        color_name = color['name']
-        color_code = color['code']
-        # key
-        glyph_scale = size / 20.0
-        fill = 'fill:rgb(255,255,255);' if self.black_white else 'fill:rgb('+str(color_rgb[0])+', '+str(color_rgb[1])+', '+str(color_rgb[2])+');'
-        stroke = 'stroke:rgb(20,20,20);stroke-width:1;' if self.minor_lines else 'stroke:none;'
-        sym = self.gen_glyph(idx, x, y, glyph_scale) if self.symbols else ''
-        self.xml += '<rect x="0" y="'+str(y)+'" width="'+str(size)+'" height="'+str(size)+'" style="'+fill+stroke+'"/>' + sym
+        r, g, b = color['rgb'] if self.color else (255, 255, 255)
+        # symbol
+        style = {
+            'fill': f'rgb({r},{g},{b})',
+            'stroke': f'rgb({self.minor_grid_rgb})',
+            'stroke-width': self.minor_grid_width,
+        }
+        self._add_xml_rect(x, y, size, size, style)
+        if self.symbols:
+            self._add_xml_symbol(idx, x, y, size)
         # color name
-        self.xml += '<rect x="'+str(size)+'" y="'+str(y)+'" width="'+str(size* 10)+'" height="'+str(size)+'" style="fill:rgb(255,255,255);stroke:black;stroke-width:1;"/>'
-        self.xml += '<text x = "' + str(x + size * 1.5) + '" y = "' + str(y + size / 2.0) + '" fill="black">' + color_name + '</text>'
+        rect_style = {
+            'fill': f'rgb({self.legend_fill_color})',
+            'stroke': f'rgb({self.legend_stroke_color})',
+            'stroke-width': self.legend_stroke_width,
+        }
+        text_style = {
+            'fill': self.font_color,
+        }
+        self._add_xml_rect(size, y, 10*size, size, rect_style)
+        self._add_xml_text(x + 1.5*size, y + size/2.0, text_style, color["name"])
         # color code
-        self.xml += '<rect x="'+str(size*11)+'" y="'+str(y)+'" width="'+str(size* 2)+'" height="'+str(size)+'" style="fill:rgb(255,255,255);stroke:black;stroke-width:1;"/>'
-        self.xml += '<text x = "' + str(size* 11 + (size/2.0)) + '" y = "' + str(y + size / 2.0) + '" fill="black">' + color_code + '</text>'
+        self._add_xml_rect(11*size, y, 2*size, size, rect_style)
+        self._add_xml_text(11.5*size, y + size/2.0, text_style, color["code"])
         
     def save(self, filename):
-        self.xml += '</svg>'
+        self._write_xml_line('</svg>')
         f = open(filename,'w')
         f.write(self.xml)
         f.close()
