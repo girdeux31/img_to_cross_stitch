@@ -131,13 +131,15 @@ if __name__ == '__main__':
     x = y = svg_cell_size # to allow drawing of midpoint arrows
     for row in svg_pattern:
         for c_idx in row:
-            svg_rgb.add_square_and_symbol(palette_list, c_idx, x, y, svg_cell_size)
-            svg_bw.add_square_and_symbol(palette_list, c_idx, x, y, svg_cell_size)
+            svg_rgb.add_color(palette_list, c_idx, x, y, svg_cell_size)
+            svg_rgb.add_symbol(c_idx, x, y, svg_cell_size)
+            svg_bw.add_color(palette_list, c_idx, x, y, svg_cell_size)
+            svg_bw.add_symbol(c_idx, x, y, svg_cell_size)
             x += svg_cell_size
         y += svg_cell_size
         x = svg_cell_size
-    svg_bw.add_major_gridlines(svg_cell_size, width, height)
-    svg_rgb.add_major_gridlines(svg_cell_size, width, height)
+    svg_bw.add_gridlines(svg_cell_size, width, height)
+    svg_rgb.add_gridlines(svg_cell_size, width, height)
 
     # generate the legend image
 

@@ -97,15 +97,17 @@ class SVG:
         xml_code += '"/>'
         self._write_xml_line(xml_code)
 
-    def add_square_and_symbol(self, palette: list[dict[str, tuple | str]], idx: int, x: int, y: int, size: int) -> None:
-        """Add xml square and a symbol inside"""
+    def add_color(self, palette: list[dict[str, tuple | str]], idx: int, x: int, y: int, size: int) -> None:
+        """Add colors as "pixels" """
         r, g, b = palette[idx]['rgb'] if self.color else (255, 255, 255)
         style = {
             'fill': f'rgb({r},{g},{b})',
-            'stroke': self.minor_grid_color,
-            'stroke-width': self.minor_grid_width,
+            'stroke': 'none',
         }
         self._add_xml_rect(x, y, size, size, style)
+
+    def add_symbol(self, idx: int, x: int, y: int, size: int) -> None:
+        """Add symbols"""
         if self.symbols:
             self._add_xml_symbol(idx, x, y, size)
         
@@ -142,17 +144,30 @@ class SVG:
         transform = f'translate({width/2} 0)'
         self._add_xml_path(code, style, transform)
     
-    def add_major_gridlines(self, size: int, width: int, height: int) -> None:
+    def add_gridlines(self, size: int, width: int, height: int) -> None:
+        """Add major and minor gridlines"""
+        self._add_minor_gridlines(size, width, height)
+        self._add_major_gridlines(size, width, height)
+
+    def _add_major_gridlines(self, size: int, width: int, height: int) -> None:
+        style = {
+            'stroke': self.major_grid_color,
+            'stroke-width': self.major_grid_width,
+        }
         for x in range(11*size, width, 10*size):
-            self._write_xml_line(
-                f'<line x1="{x}" y1="{size}" x2="{x}" y2="{height}" '
-                f'style="stroke:{self.major_grid_color};stroke-width:{self.major_grid_width}" />'
-            )
+            self._add_xml_line(x, size, x, height, style)
         for y in range(11*size, height, 10*size):
-            self._write_xml_line(
-                f'<line x1="{size}" y1="{y}" x2="{width}" y2="{y}" '
-                f'style="stroke:{self.major_grid_color};stroke-width:{self.major_grid_width}" />'
-            )
+            self._add_xml_line(size, y, width, y, style)
+
+    def _add_minor_gridlines(self, size: int, width: int, height: int) -> None:
+        style = {
+            'stroke': self.minor_grid_color,
+            'stroke-width': self.minor_grid_width,
+        }
+        for x in range(2*size, width, size):
+            self._add_xml_line(x, size, x, height, style)
+        for y in range(2*size, height, size):
+            self._add_xml_line(size, y, width, y, style)
 
     def add_legend(self, y: int, size: int, idx: int, color: dict[str, tuple | str]):
         x = 0
