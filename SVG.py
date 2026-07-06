@@ -31,6 +31,7 @@ class SVG:
     legend_stroke_color = 'black'
     legend_stroke_width = 1
     svg_fill = 'none'
+    symbol_class_name = 'glyph'
     
     def __init__(self, color: bool=True, symbols: bool=True):
         """Init object"""
@@ -81,20 +82,15 @@ class SVG:
         xml_code += '</style>'
         self._write_xml_line(xml_code, indent=1)
 
-    def _add_xml_path(self, code: str, style_dict: dict[str, str], transform: str) -> None:
+    def _add_xml_path(self, code: str, style_dict: dict[str, str], transform: str, class_name: str='') -> None:
         """Add xml path tag"""
-        xml_code = f'<path d="{code}"'
+        xml_code = '<path '
+        if class_name:
+            xml_code += f"class='{class_name}' "
+        xml_code += f'd="{code}"'
         for style_arg, style_value in style_dict.items():
             xml_code += f' {style_arg}="{style_value}"'
         xml_code += f" transform='{transform}'/>"
-        self._write_xml_line(xml_code, indent=1)
-
-    def _add_xml_symbol(self, idx: int, x: int | float, y: int | float, size: int) -> str:
-        """Add xml symbol according to idx value, position (x, y) and size"""
-        scale = size / 20.0
-        xml_code = "<path class='glyph' d='"
-        xml_code += self.idx_to_code[idx] if idx in self.idx_to_code else ''
-        xml_code += f"' transform='translate({x} {y}) scale({scale})'/>"
         self._write_xml_line(xml_code, indent=1)
 
     def _add_xml_text(self, x: int | float, y: int | float, style_dict: dict[str, str], text: str) -> None:
@@ -125,7 +121,9 @@ class SVG:
     def add_symbol(self, idx: int, x: int, y: int, size: int) -> None:
         """Add symbols"""
         if self.symbols:
-            self._add_xml_symbol(idx, x, y, size)
+            code = self.idx_to_code.get(idx, '')
+            transform = f'translate({x} {y}) scale({size/20.0})'
+            self._add_xml_path(code, {}, transform, self.symbol_class_name)
         
     def add_header(self, width: int, height: int) -> None:
         """Add svg header"""
@@ -201,7 +199,9 @@ class SVG:
         }
         self._add_xml_rect(x, y, size, size, style)
         if self.symbols:
-            self._add_xml_symbol(idx, x, y, size)
+            code = self.idx_to_code.get(idx, '')
+            transform = f'translate({x} {y}) scale({size/20.0})'
+            self._add_xml_path(code, {}, transform, self.symbol_class_name)
         # color name
         rect_style = {
             'fill': self.legend_fill_color,
