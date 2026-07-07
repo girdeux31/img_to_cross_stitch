@@ -3,8 +3,8 @@ from pathlib import Path
 from image import Image
 from pattern_composer import PatternComposer
 
-
 SVG_UNIT_SIZE = 10
+
 
 class Pattern:
 

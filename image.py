@@ -1,8 +1,8 @@
 from pathlib import Path
+
 from PIL import Image as PILImage
 
 from dmc import DMC
-
 
 RESIZE_WIDTH  = 1000
 MASK_SIZE = 1

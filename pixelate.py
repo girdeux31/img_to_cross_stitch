@@ -1,8 +1,8 @@
 import sys
 from pathlib import Path
 
-from pattern import Pattern
 from legend import Legend
+from pattern import Pattern
 
 
 if __name__ == '__main__':

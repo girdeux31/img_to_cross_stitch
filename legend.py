@@ -2,8 +2,8 @@ from pathlib import Path
 
 from legend_composer import LegendComposer
 
-
 SVG_UNIT_SIZE = 40
+
 
 class Legend:
 

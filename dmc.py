@@ -4,6 +4,7 @@
 import csv
 import math
 
+
 class DMC:
 
     csv_file = 'dmc_colors.csv'

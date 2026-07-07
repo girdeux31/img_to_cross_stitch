@@ -1,5 +1,6 @@
-import cairosvg
 from pathlib import Path
+
+import cairosvg
 
 
 class SVG:
