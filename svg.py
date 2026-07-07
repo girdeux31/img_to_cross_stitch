@@ -85,6 +85,7 @@ class SVG:
         f.write(self.xml)
         f.close()
 
+    @staticmethod
     def svg_to_png(svg_file: Path, png_file: Path) -> None:
         """Read svg file and save it as png"""
         if not svg_file.exists():
