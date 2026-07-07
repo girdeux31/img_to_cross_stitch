@@ -3,6 +3,8 @@ from pathlib import Path
 from legend_composer import LegendComposer
 
 SVG_UNIT_SIZE = 40
+COLUMN_WIDTHS = [SVG_UNIT_SIZE, 10*SVG_UNIT_SIZE, 3*SVG_UNIT_SIZE]
+
 
 
 class Legend:
@@ -17,15 +19,18 @@ class Legend:
 
     def generate(self, palette: list[dict[str, tuple | str]]) -> None:
         n_colors = len(palette)
-        self.width = 13*SVG_UNIT_SIZE
+        x_pos = [0] + [sum(COLUMN_WIDTHS[:i+1]) for i in range(len(COLUMN_WIDTHS[:-1]))]
+        widths = COLUMN_WIDTHS
+        height = SVG_UNIT_SIZE
+        self.width = sum(COLUMN_WIDTHS)
         self.height = n_colors*SVG_UNIT_SIZE
         self.legend_composer.add_header(self.width, self.height)
-        y = 0
         for idx, color_info in enumerate(palette):
-            self.legend_composer.add_symbol(y, SVG_UNIT_SIZE, idx, color_info)
-            self.legend_composer.add_color_name(y, SVG_UNIT_SIZE, color_info)
-            self.legend_composer.add_color_code(y, SVG_UNIT_SIZE, color_info)
-            y += SVG_UNIT_SIZE
+            y_pos = idx*SVG_UNIT_SIZE
+            self.legend_composer.add_symbol(x_pos[0], y_pos, widths[0], height, idx, color_info)
+            self.legend_composer.add_color_name(x_pos[1], y_pos, widths[1], height, color_info)
+            self.legend_composer.add_color_code(x_pos[2], y_pos, widths[2], height, color_info)
+            # TODO add column with number of stitches
         self.legend_composer.add_tail()
 
     def save(self, out_file: Path, formats: list[str]=['pdf'], png_scale: float=1.0) -> None:

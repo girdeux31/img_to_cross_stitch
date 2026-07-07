@@ -39,14 +39,12 @@ class Pattern:
         height = self.height * SVG_UNIT_SIZE
         self.pattern_composer.add_header(width, height)
         self.pattern_composer.add_arrows(SVG_UNIT_SIZE, width, height)
-        x = y = SVG_UNIT_SIZE # to allow drawing of midpoint arrows
-        for row in self.idx_2d_list:
-            for c_idx in row:
-                self.pattern_composer.add_color(self.palette, c_idx, x, y, SVG_UNIT_SIZE)
-                self.pattern_composer.add_symbol(c_idx, x, y, SVG_UNIT_SIZE)
-                x += SVG_UNIT_SIZE
-            y += SVG_UNIT_SIZE
-            x = SVG_UNIT_SIZE
+        for y_idx, row in enumerate(self.idx_2d_list):
+            y_pos = (y_idx+1) * SVG_UNIT_SIZE  # +1 allows space for midpoint arrows
+            for x_idx, color_idx in enumerate(row):
+                x_pos = (x_idx+1) * SVG_UNIT_SIZE
+                self.pattern_composer.add_color(self.palette, color_idx, x_pos, y_pos, SVG_UNIT_SIZE)
+                self.pattern_composer.add_symbol(color_idx, x_pos, y_pos, SVG_UNIT_SIZE)
         self.pattern_composer.add_gridlines(SVG_UNIT_SIZE, width, height)
         self.pattern_composer.add_tail()
 
