@@ -21,9 +21,9 @@ class LegendComposer(SVGComposer):
     stroke_color = 'black'
     stroke_width = 1
 
-    def add_symbol(self, x_pos: int, y_pos: int, width: int, height: int, idx: int, color: dict[str, tuple | str]) -> None:
+    def add_symbol(self, x_pos: int, y_pos: int, width: int, height: int, idx: int, color_info: dict[str, tuple | str]) -> None:
         """Add symbol in first column"""
-        r, g, b = color['rgb'] if self.color else (255, 255, 255)
+        r, g, b = color_info['rgb'] if self.color else (255, 255, 255)
         rect_style = {
             'fill': f'rgb({r},{g},{b})',
             'stroke': self.stroke_color,
@@ -38,7 +38,7 @@ class LegendComposer(SVGComposer):
             }
             self.svg.add_xml_path(code, path_style, self.svg_symbol_class_name)
 
-    def add_color_name(self, x_pos: int, y_pos: int, width: int, height: int, color: dict[str, tuple | str]) -> None:
+    def add_color_name(self, x_pos: int, y_pos: int, width: int, height: int, color_info: dict[str, tuple | str]) -> None:
         """Add color name in second column"""
         rect_style = {
             'fill': self.fill_color,
@@ -46,9 +46,9 @@ class LegendComposer(SVGComposer):
             'stroke-width': self.stroke_width,
         }
         self.svg.add_xml_rect(x_pos, y_pos, width, height, rect_style)
-        self.svg.add_xml_text(x_pos + 0.5*height, y_pos + height/1.5, {}, color['name'], self.svg_text_class_name)
+        self.svg.add_xml_text(x_pos + 0.5*height, y_pos + height/1.5, {}, color_info['name'], self.svg_text_class_name)
 
-    def add_color_code(self, x_pos: int, y_pos: int, width: int, height: int, color: dict[str, tuple | str]) -> None:
+    def add_color_code(self, x_pos: int, y_pos: int, width: int, height: int, color_info: dict[str, tuple | str]) -> None:
         """Add color code in third column"""
         rect_style = {
             'fill': self.fill_color,
@@ -56,4 +56,14 @@ class LegendComposer(SVGComposer):
             'stroke-width': self.stroke_width,
         }
         self.svg.add_xml_rect(x_pos, y_pos, width, height, rect_style)
-        self.svg.add_xml_text(x_pos + 0.5*height, y_pos + height/1.5, {}, color['code'], self.svg_text_class_name)
+        self.svg.add_xml_text(x_pos + 0.5*height, y_pos + height/1.5, {}, color_info['code'], self.svg_text_class_name)
+
+    def add_stitches(self, x_pos: int, y_pos: int, width: int, height: int, color_info: dict[str, tuple | str]) -> None:
+        """Add stitches in forth column"""
+        rect_style = {
+            'fill': self.fill_color,
+            'stroke': self.stroke_color,
+            'stroke-width': self.stroke_width,
+        }
+        self.svg.add_xml_rect(x_pos, y_pos, width, height, rect_style)
+        self.svg.add_xml_text(x_pos + 0.5*height, y_pos + height/1.5, {}, f'x{color_info["stitches"]}', self.svg_text_class_name)

@@ -96,15 +96,19 @@ class Image:
         dmc = DMC()
         palette_list = []
         palette = self.pil_image.getpalette()
-        for idx in range(0, len(palette), 3):
-            rgb = tuple(palette[idx:idx+3])
+        palette = tuple(palette[idx:idx+3] for idx in range(0, len(palette), 3))
+        idx_2d_list = self.get_values_as_2d_list()
+        for c_idx in range(0, len(palette)):
+            rgb = palette[c_idx]
             code = dmc.get_most_similar_code_by_rgb(rgb, corrected=True)
             name = dmc.get_color_name_by_code(code)
+            stitches = len([idx for row in idx_2d_list for idx in row if c_idx == idx])
             palette_list.append(
                 {
                     'rgb': rgb,
                     'code': code,
                     'name': name,
+                    'stitches': stitches,
                 }
             )
 

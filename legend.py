@@ -3,7 +3,7 @@ from pathlib import Path
 from legend_composer import LegendComposer
 
 SVG_UNIT_SIZE = 40
-COLUMN_WIDTHS = [SVG_UNIT_SIZE, 10*SVG_UNIT_SIZE, 3*SVG_UNIT_SIZE]
+COLUMN_WIDTHS = [SVG_UNIT_SIZE, 8*SVG_UNIT_SIZE, 3*SVG_UNIT_SIZE, 3*SVG_UNIT_SIZE]
 
 
 
@@ -30,7 +30,7 @@ class Legend:
             self.legend_composer.add_symbol(x_pos[0], y_pos, widths[0], height, idx, color_info)
             self.legend_composer.add_color_name(x_pos[1], y_pos, widths[1], height, color_info)
             self.legend_composer.add_color_code(x_pos[2], y_pos, widths[2], height, color_info)
-            # TODO add column with number of stitches
+            self.legend_composer.add_stitches(x_pos[3], y_pos, widths[3], height, color_info)
         self.legend_composer.add_tail()
 
     def save(self, out_file: Path, formats: list[str]=['pdf'], png_scale: float=1.0) -> None:
