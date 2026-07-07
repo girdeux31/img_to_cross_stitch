@@ -3,7 +3,6 @@ from svg_composer import SVGComposer
 
 class PatternComposer(SVGComposer):
 
-    # TODO: move to constatns
     idx_to_code = {
         0: "M4 4L16 16", # backslash
         1: "M4 16L16 4M4 10L 16 10", # forward slash
@@ -18,8 +17,6 @@ class PatternComposer(SVGComposer):
         10: "M4 4L4 16 16 16 16 4Z", # square, filled black
     }
     idx_to_fill = [2, 6, 7, 10]
-    symbol_color = 'black'
-    symbol_class_name = 'glyph'
     arrow_color = 'black'
     arrow_width = 2
     arrow_fill = 'none'
@@ -83,11 +80,11 @@ class PatternComposer(SVGComposer):
         self.svg.add_xml_rect(x, y, size, size, style)
 
     def add_symbol(self, idx: int, x: int, y: int, size: int) -> None:
-        """Add symbols""" # TODO: before square symbols were filled black, not now
+        """Add symbols"""
         if self.symbols:
             code = self.idx_to_code.get(idx, '')
             style = {
                 'transform': f'translate({x} {y}) scale({size/20.0})',
                 'fill': self.symbol_color if idx in self.idx_to_fill else "none",
             }
-            self.svg.add_xml_path(code, style, self.symbol_class_name)
+            self.svg.add_xml_path(code, style, self.svg_symbol_class_name)

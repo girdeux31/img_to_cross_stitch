@@ -63,9 +63,12 @@ class SVG:
         xml_code += '/>'
         self._write_xml_line(xml_code, indent=1)
 
-    def add_xml_text(self, x: int | float, y: int | float, style_dict: dict[str, str], text: str) -> None:
+    def add_xml_text(self, x: int | float, y: int | float, style_dict: dict[str, str], text: str, class_name: str='') -> None:
         """Add xml text tag"""
-        xml_code = f'<text x="{x}" y="{y}"'
+        xml_code = '<text '
+        if class_name:
+            xml_code += f'class="{class_name}" '
+        xml_code += f'x="{x}" y="{y}"'
         for style_arg, style_value in style_dict.items():
             xml_code += f' {style_arg}="{style_value}"'
         xml_code += f'>{text}</text>'

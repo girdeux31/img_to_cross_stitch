@@ -5,11 +5,13 @@ from svg import SVG
 
 class SVGComposer:
 
-    # TODO: move to constatns
     font_size = '20px'
+    font_color = 'black'
     symbol_color = 'black'
     symbol_width = 1
     svg_fill = 'none'
+    svg_text_class_name = 'text'
+    svg_symbol_class_name = 'glyph'
 
     def __init__(self, color: bool=True, symbols: bool=True) -> None:
         """Init object"""
@@ -23,10 +25,11 @@ class SVGComposer:
             'fill': self.svg_fill,
         }
         classes = {
-            'svg_txt': {        # TODO: svg_txt not used
+            self.svg_text_class_name: {
                 'font-size': self.font_size,
+                'fill': self.font_color,
             },
-            'glyph': {
+            self.svg_symbol_class_name: {
                 'stroke': self.symbol_color,
                 'stroke-width': self.symbol_width,
             }

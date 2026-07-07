@@ -3,7 +3,6 @@ from svg_composer import SVGComposer
 
 class LegendComposer(SVGComposer):
 
-    # TODO: move to constatns
     idx_to_code = {
         0: "M4 4L16 16", # backslash
         1: "M4 16L16 4M4 10L 16 10", # forward slash
@@ -18,9 +17,6 @@ class LegendComposer(SVGComposer):
         10: "M4 4L4 16 16 16 16 4Z", # square, filled black
     }
     idx_to_fill = [2, 6, 7, 10]
-    symbol_color = 'black'
-    symbol_class_name = 'glyph'
-    font_color = 'black'
     fill_color = 'white'
     stroke_color = 'black'
     stroke_width = 1
@@ -40,7 +36,7 @@ class LegendComposer(SVGComposer):
                 'transform': f'translate({0} {y}) scale({size/20.0})',
                 'fill': self.symbol_color if idx in self.idx_to_fill else "none",
             }
-            self.svg.add_xml_path(code, path_style, self.symbol_class_name)
+            self.svg.add_xml_path(code, path_style, self.svg_symbol_class_name)
 
     def add_color_name(self, y: int, size: int, color: dict[str, tuple | str]) -> None:
         """Add color name in second column"""
@@ -49,11 +45,8 @@ class LegendComposer(SVGComposer):
             'stroke': self.stroke_color,
             'stroke-width': self.stroke_width,
         }
-        text_style = {
-            'fill': self.font_color,
-        }
         self.svg.add_xml_rect(size, y, 10*size, size, rect_style)
-        self.svg.add_xml_text(1.5*size, y + size/2.0, text_style, color['name'])
+        self.svg.add_xml_text(1.5*size, y + size/2.0, {}, color['name'], self.svg_text_class_name)
 
     def add_color_code(self, y: int, size: int, color: dict[str, tuple | str]) -> None:
         """Add color code in third column"""
@@ -62,8 +55,5 @@ class LegendComposer(SVGComposer):
             'stroke': self.stroke_color,
             'stroke-width': self.stroke_width,
         }
-        text_style = {
-            'fill': self.font_color,
-        }
         self.svg.add_xml_rect(11*size, y, 2*size, size, rect_style)
-        self.svg.add_xml_text(11.5*size, y + size/2.0, text_style, color['code'])
+        self.svg.add_xml_text(11.5*size, y + size/2.0, {}, color['code'], self.svg_text_class_name)
