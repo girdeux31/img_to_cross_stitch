@@ -39,16 +39,17 @@ class Image:
         """Resize image as (pix_cols,pix_rows,rgb)"""
         dmc = DMC()
         pixel_size = int(RESIZE_WIDTH / int(n_pixels_per_row))
+        rgb_2d_list = self.get_values_as_2d_list(step=pixel_size)
+        n_rows, n_cols = (len(rgb_2d_list[0]), len(rgb_2d_list))  # rows, columns
         rgb_2d_list = [
             [
-                dmc.get_most_similar_rgb_by_rgb(self.pil_image.getpixel((x, y))) 
-                for x in range(0, self.width, pixel_size)
+                dmc.get_most_similar_rgb_by_rgb(rgb_2d_list[y][x]) 
+                for x in range(0, n_rows)
             ]
-            for y in range(0, self.height, pixel_size)
+            for y in range(0, n_cols)
         ]
-        new_size = (len(rgb_2d_list[0]), len(rgb_2d_list))  # rows, columns
-
-        self.pil_image = PILImage.new('RGB', new_size)
+        
+        self.pil_image = PILImage.new('RGB', (n_rows, n_cols))
         self.pil_image.putdata([rgb for row in rgb_2d_list for rgb in row])
 
     def _quantize(self, n_colors: int) -> None:
@@ -56,6 +57,7 @@ class Image:
         self.pil_image = self.pil_image.convert('P', palette=PILImage.ADAPTIVE, colors=n_colors)
 
     def _clean(self) -> None:
+        # TODO move to pattern?
         """Remove isolated pixels and replace by majority neighborhood color
         Resulting image is still (pix_cols,pix_rows,color_idx)"""
         # TODO: remove pixel if only one neighbor is present in a diagonal?
@@ -85,7 +87,6 @@ class Image:
         self._resize()
         self._pixelate(n_pixels_per_row)
         self._quantize(n_colors)
-        #self._clean()
 
     def get_palette(self) -> list[dict[str, tuple | str]]:
 
@@ -109,7 +110,7 @@ class Image:
 
         return palette_list
 
-    def get_values_as_2d_list(self, step: int=1) -> list[list[tuple]]:
+    def get_values_as_2d_list(self, step: int=1) -> list[list[tuple | int]]:
         """Get image values as a 2d list, either rgb or color index values"""
         return [
             [
