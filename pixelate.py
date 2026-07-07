@@ -1,22 +1,9 @@
 import sys
-import cairosvg
 from pathlib import Path
 
 from pattern import Pattern
 from legend import Legend
 
-
-def svg_to_png(svg_file: Path):
-    """Read svg file and save it as png"""
-    if not svg_file.exists():
-        raise FileNotFoundError(f'File \'{svg_file}\' not found')
-    
-    png_file = svg_file.with_suffix('.png')
-    with open(svg_file, "rb") as f:
-        svg_bytes = f.read()
-    png_bytes = cairosvg.svg2png(bytestring=svg_bytes)
-    with open(png_file, 'wb') as f:
-        f.write(png_bytes)
 
 if __name__ == '__main__':
 
@@ -44,13 +31,14 @@ if __name__ == '__main__':
     out_name = input_file.stem
     svg_pattern_file = out_path / f'{out_name}_pattern.svg'
     svg_legend_file = out_path / f'{out_name}_legend.svg'
+    png_pattern_file = svg_pattern_file.with_suffix('.png')
 
     # Generate pattern svg
 
     pattern = Pattern(color=True, symbols=True)
     pattern.process_image(input_file, n_colors, n_stitches_per_row)
     pattern.generate()
-    pattern.save(svg_pattern_file)
+    pattern.save(svg_pattern_file, png_pattern_file, export_png=True)
 
     # Generate legend svg
 

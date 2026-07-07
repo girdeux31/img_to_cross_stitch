@@ -34,5 +34,9 @@ class SVGComposer:
         self.svg.add_xml_header(width, height, style)
         self.svg.add_xml_style(classes)
 
-    def save(self, svg_file: Path) -> None:
+    def save(self, svg_file: Path, png_file: Path=None, export_png: bool=False) -> None:
+        if export_png and png_file is None:
+            raise ValueError('Include \'png_file\' argument if \'export_png\' is True')
         self.svg.save(svg_file)
+        if export_png:
+            self.svg.svg_to_png(svg_file, png_file)

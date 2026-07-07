@@ -1,3 +1,4 @@
+import cairosvg
 from pathlib import Path
 
 
@@ -77,9 +78,20 @@ class SVG:
         xml_code += '"/>'
         self._write_xml_line(xml_code, indent=1)
 
-    def save(self, filename: Path) -> None:
+    def save(self, svg_file: Path) -> None:
         """Save as svg file"""
         self._write_xml_line('</svg>')
-        f = open(filename,'w')
+        f = open(svg_file,'w')
         f.write(self.xml)
         f.close()
+
+    def svg_to_png(svg_file: Path, png_file: Path) -> None:
+        """Read svg file and save it as png"""
+        if not svg_file.exists():
+            raise FileNotFoundError(f'File \'{svg_file}\' not found')
+        
+        with open(svg_file, "rb") as f:
+            svg_bytes = f.read()
+        png_bytes = cairosvg.svg2png(bytestring=svg_bytes)
+        with open(png_file, 'wb') as f:
+            f.write(png_bytes)

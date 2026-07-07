@@ -1,7 +1,5 @@
-import cairosvg
 from pathlib import Path
 
-from image import Image
 from legend_composer import LegendComposer
 
 
@@ -29,5 +27,5 @@ class Legend:
             self.legend_composer.add_color_code(y, SVG_UNIT_SIZE, color_info)
             y += SVG_UNIT_SIZE
 
-    def save(self, svg_file: Path) -> None:
-        self.legend_composer.save(svg_file)
+    def save(self, svg_file: Path, png_file: Path=None, export_png: bool=False) -> None:
+        self.legend_composer.save(svg_file, png_file, export_png)

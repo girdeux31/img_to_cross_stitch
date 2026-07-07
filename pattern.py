@@ -1,4 +1,3 @@
-import cairosvg
 from pathlib import Path
 
 from image import Image
@@ -50,5 +49,5 @@ class Pattern:
             x = SVG_UNIT_SIZE
         self.pattern_composer.add_gridlines(SVG_UNIT_SIZE, width, height)
 
-    def save(self, svg_file: Path) -> None:
-        self.pattern_composer.save(svg_file)
+    def save(self, svg_file: Path, png_file: Path=None, export_png: bool=False) -> None:
+        self.pattern_composer.save(svg_file, png_file, export_png)
