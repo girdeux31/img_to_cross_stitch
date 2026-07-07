@@ -37,9 +37,13 @@ class SVGComposer:
         self.svg.add_xml_header(width, height, style)
         self.svg.add_xml_style(classes)
 
-    def save(self, svg_file: Path, png_file: Path=None, export_png: bool=False) -> None:
-        if export_png and png_file is None:
-            raise ValueError('Include \'png_file\' argument if \'export_png\' is True')
+    def save(self, svg_file: Path, export_to: list[str]=[], scale: float=1.0) -> None:
+        """Save / export output as svg, png or pdf, scale is only applied to pngs"""
         self.svg.save(svg_file)
-        if export_png:
-            self.svg.svg_to_png(svg_file, png_file)
+        for format_ in export_to:
+            if format_ == 'png':
+                self.svg.svg_to_png(svg_file, svg_file.with_suffix('.png'), scale)
+            elif format_ == 'pdf':
+                self.svg.svg_to_pdf(svg_file, svg_file.with_suffix('.pdf'))
+            else:
+                raise ValueError(f'Format file \'{format_}\' not supported')

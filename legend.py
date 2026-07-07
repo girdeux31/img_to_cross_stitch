@@ -27,5 +27,5 @@ class Legend:
             self.legend_composer.add_color_code(y, SVG_UNIT_SIZE, color_info)
             y += SVG_UNIT_SIZE
 
-    def save(self, svg_file: Path, png_file: Path=None, export_png: bool=False) -> None:
-        self.legend_composer.save(svg_file, png_file, export_png)
+    def save(self, svg_file: Path, export_to: list[str]=[], scale: float=1.0) -> None:
+        self.legend_composer.save(svg_file, export_to, scale)

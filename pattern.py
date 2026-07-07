@@ -49,5 +49,5 @@ class Pattern:
             x = SVG_UNIT_SIZE
         self.pattern_composer.add_gridlines(SVG_UNIT_SIZE, width, height)
 
-    def save(self, svg_file: Path, png_file: Path=None, export_png: bool=False) -> None:
-        self.pattern_composer.save(svg_file, png_file, export_png)
+    def save(self, svg_file: Path, export_to: list[str]=[], scale: float=1.0) -> None:
+        self.pattern_composer.save(svg_file, export_to, scale)

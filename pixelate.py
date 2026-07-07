@@ -21,6 +21,7 @@ if __name__ == '__main__':
     input_file = Path('examples/bird.jpg')
     n_colors = 3
     n_stitches_per_row = 50
+    scale = 2.0
 
     if not input_file.exists():
         raise FileNotFoundError(f'File \'{input_file}\' not found')
@@ -31,14 +32,13 @@ if __name__ == '__main__':
     out_name = input_file.stem
     svg_pattern_file = out_path / f'{out_name}_pattern.svg'
     svg_legend_file = out_path / f'{out_name}_legend.svg'
-    png_pattern_file = svg_pattern_file.with_suffix('.png')
 
     # Generate pattern svg
 
     pattern = Pattern(color=True, symbols=True)
     pattern.process_image(input_file, n_colors, n_stitches_per_row)
     pattern.generate()
-    pattern.save(svg_pattern_file, png_pattern_file, export_png=True)
+    pattern.save(svg_pattern_file, export_to=['png', 'pdf'], scale=scale)
 
     # Generate legend svg
 

@@ -90,13 +90,23 @@ class SVG:
         f.close()
 
     @staticmethod
-    def svg_to_png(svg_file: Path, png_file: Path) -> None:
+    def svg_to_png(svg_file: Path, png_file: Path, scale: float=1.0) -> None:
         """Read svg file and save it as png"""
         if not svg_file.exists():
             raise FileNotFoundError(f'File \'{svg_file}\' not found')
-        
         with open(svg_file, "rb") as f:
             svg_bytes = f.read()
-        png_bytes = cairosvg.svg2png(bytestring=svg_bytes)
+        png_bytes = cairosvg.svg2png(bytestring=svg_bytes, scale=scale)
         with open(png_file, 'wb') as f:
             f.write(png_bytes)
+
+    @staticmethod
+    def svg_to_pdf(svg_file: Path, pdf_file: Path) -> None:
+        """Read svg file and save it as png"""
+        if not svg_file.exists():
+            raise FileNotFoundError(f'File \'{svg_file}\' not found')
+        with open(svg_file, "rb") as f:
+            svg_bytes = f.read()
+        pdf_bytes = cairosvg.svg2pdf(bytestring=svg_bytes)
+        with open(pdf_file, 'wb') as f:
+            f.write(pdf_bytes)
