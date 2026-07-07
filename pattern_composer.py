@@ -1,0 +1,93 @@
+from svg_composer import SVGComposer
+
+
+class PatternComposer(SVGComposer):
+
+    # TODO: move to constatns
+    idx_to_code = {
+        0: "M4 4L16 16", # backslash
+        1: "M4 16L16 4M4 10L 16 10", # forward slash
+        2: "M7 7L7 13 13 13 13 7Z", # little square, filled black
+        3: "M4 4L10 16L16 4 Z", # triangle, upside down
+        4: "M4 4L16 16M4 16 L16 4", # diagonal cross
+        5: "M4 4L4 16 16 16 16 4Z", # square
+        6: "M4 4L10 16L16 4 Z", # triangle, upside down, filled black
+        7: "M10 4L6 10 10 16 14 10Z", # diamond, filled black
+        8: "M8 8L8 12 12 12 12 8Z", # little square
+        9: "M4 4L16 16M4 16 L16 4M10 4L10 16M4 10L16 10", # 8 way cross
+        10: "M4 4L4 16 16 16 16 4Z", # square, filled black
+    }
+    idx_to_fill = [2, 6, 7, 10]
+    symbol_color = 'black'
+    symbol_class_name = 'glyph'
+    arrow_color = 'black'
+    arrow_width = 2
+    arrow_fill = 'none'
+    major_grid_color = 'black'
+    major_grid_width = 2
+    minor_grid_color = 'rgb(20,20,20)'
+    minor_grid_width = 1
+
+    def add_arrows(self, size: int, width: int, height: int) -> None:
+        """Add midpoint arrows"""
+        h = str(size/2)
+        f = str(size)
+        style = {
+            'stroke': self.arrow_color,
+            'stroke-width': self.arrow_width,
+            'fill': self.arrow_fill,
+            'transform': f'translate(0 {height/2})',
+        }
+        # vertical arrow looking down
+        code = f'M0 {h}L{f} {h}M{h} 0L{f} {h} {h} {f}'
+        self.svg.add_xml_path(code, style)
+        # horizontal arrow looking right
+        style['transform'] = f'translate({width/2} 0)'
+        code = f'M{h} 0L{h} {f} M{f} {h}L{h} {f} 0 {h}'
+        self.svg.add_xml_path(code, style)
+
+    def add_gridlines(self, size: int, width: int, height: int) -> None:
+        """Add major and minor gridlines"""
+        self.add_minor_gridlines(size, width, height)
+        self.add_major_gridlines(size, width, height)
+
+    def add_major_gridlines(self, size: int, width: int, height: int) -> None:
+        """Add major gridlines"""
+        style = {
+            'stroke': self.major_grid_color,
+            'stroke-width': self.major_grid_width,
+        }
+        for x in range(11*size, width, 10*size):
+            self.svg.add_xml_line(x, size, x, height, style)
+        for y in range(11*size, height, 10*size):
+            self.svg.add_xml_line(size, y, width, y, style)
+
+    def add_minor_gridlines(self, size: int, width: int, height: int) -> None:
+        """Add minor gridlines"""
+        style = {
+            'stroke': self.minor_grid_color,
+            'stroke-width': self.minor_grid_width,
+        }
+        for x in range(2*size, width, size):
+            self.svg.add_xml_line(x, size, x, height, style)
+        for y in range(2*size, height, size):
+            self.svg.add_xml_line(size, y, width, y, style)
+    
+    def add_color(self, palette: list[dict[str, tuple | str]], idx: int, x: int, y: int, size: int) -> None:
+        """Add colors as "pixels" """
+        r, g, b = palette[idx]['rgb'] if self.color else (255, 255, 255)
+        style = {
+            'fill': f'rgb({r},{g},{b})',
+            'stroke': 'none',
+        }
+        self.svg.add_xml_rect(x, y, size, size, style)
+
+    def add_symbol(self, idx: int, x: int, y: int, size: int) -> None:
+        """Add symbols""" # TODO: before square symbols were filled black, not now
+        if self.symbols:
+            code = self.idx_to_code.get(idx, '')
+            style = {
+                'transform': f'translate({x} {y}) scale({size/20.0})',
+                'fill': self.symbol_color if idx in self.idx_to_fill else "none",
+            }
+            self.svg.add_xml_path(code, style, self.symbol_class_name)
