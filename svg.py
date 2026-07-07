@@ -82,31 +82,29 @@ class SVG:
         xml_code += '"/>'
         self._write_xml_line(xml_code, indent=1)
 
-    def save(self, svg_file: Path) -> None:
-        """Save as svg file"""
+    def add_xml_tail(self) -> None:
+        """Add xml svg tag to close the file"""
         self._write_xml_line('</svg>')
+
+    def save_as_svg(self, svg_file: Path) -> None:
+        """Save as svg file"""
         f = open(svg_file,'w')
         f.write(self.xml)
         f.close()
 
-    @staticmethod
-    def svg_to_png(svg_file: Path, png_file: Path, scale: float=1.0) -> None:
-        """Read svg file and save it as png"""
-        if not svg_file.exists():
-            raise FileNotFoundError(f'File \'{svg_file}\' not found')
-        with open(svg_file, "rb") as f:
-            svg_bytes = f.read()
-        png_bytes = cairosvg.svg2png(bytestring=svg_bytes, scale=scale)
-        with open(png_file, 'wb') as f:
-            f.write(png_bytes)
+    def save_as_png(self, png_file: Path, scale: float=1.0) -> None:
+        """Save as png file, scale can be applied"""
+        with open(png_file, "wb") as f:
+            cairosvg.svg2png(
+                bytestring=self.xml.encode("utf-8"),
+                scale=scale,
+                write_to=f,
+            )
 
-    @staticmethod
-    def svg_to_pdf(svg_file: Path, pdf_file: Path) -> None:
-        """Read svg file and save it as png"""
-        if not svg_file.exists():
-            raise FileNotFoundError(f'File \'{svg_file}\' not found')
-        with open(svg_file, "rb") as f:
-            svg_bytes = f.read()
-        pdf_bytes = cairosvg.svg2pdf(bytestring=svg_bytes)
-        with open(pdf_file, 'wb') as f:
-            f.write(pdf_bytes)
+    def save_as_pdf(self, pdf_file: Path) -> None:
+        """Save as pdf file"""
+        with open(pdf_file, "wb") as f:
+            cairosvg.svg2pdf(
+                bytestring=self.xml.encode("utf-8"),
+                write_to=f,
+            )

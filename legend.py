@@ -26,6 +26,7 @@ class Legend:
             self.legend_composer.add_color_name(y, SVG_UNIT_SIZE, color_info)
             self.legend_composer.add_color_code(y, SVG_UNIT_SIZE, color_info)
             y += SVG_UNIT_SIZE
+        self.legend_composer.add_tail()
 
-    def save(self, svg_file: Path, export_to: list[str]=[], scale: float=1.0) -> None:
-        self.legend_composer.save(svg_file, export_to, scale)
+    def save(self, out_file: Path, formats: list[str]=['pdf'], png_scale: float=1.0) -> None:
+        self.legend_composer.save(out_file, formats, png_scale)

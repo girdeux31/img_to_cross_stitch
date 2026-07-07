@@ -28,20 +28,18 @@ if __name__ == '__main__':
 
     # Generate file paths
 
-    out_path = input_file.parent
-    out_name = input_file.stem
-    svg_pattern_file = out_path / f'{out_name}_pattern.svg'
-    svg_legend_file = out_path / f'{out_name}_legend.svg'
+    out_pattern_file = input_file.with_stem(f'{input_file.stem}_pattern').with_suffix('')
+    out_legend_file = input_file.with_stem(f'{input_file.stem}_legend').with_suffix('')
 
     # Generate pattern svg
 
     pattern = Pattern(color=True, symbols=True)
     pattern.process_image(input_file, n_colors, n_stitches_per_row)
     pattern.generate()
-    pattern.save(svg_pattern_file, export_to=['png', 'pdf'], scale=scale)
+    pattern.save(out_pattern_file, formats=['svg', 'png', 'pdf'], png_scale=scale)
 
     # Generate legend svg
 
     legend = Legend(color=True, symbols=True)
     legend.generate(pattern.get_palette())
-    legend.save(svg_legend_file)
+    legend.save(out_legend_file)

@@ -19,7 +19,7 @@ class Pattern:
         self.pattern_composer = PatternComposer(color, symbols)
 
     def process_image(self, img_file: Path, n_colors: int, n_pixels_per_row: int) -> None:
-
+        """Create image, process it (resize, pixelate, quantize), then get palette and pattern"""
         image = Image(img_file)
         image.process(n_colors, n_pixels_per_row)
         self.palette = image.get_palette()
@@ -48,6 +48,7 @@ class Pattern:
             y += SVG_UNIT_SIZE
             x = SVG_UNIT_SIZE
         self.pattern_composer.add_gridlines(SVG_UNIT_SIZE, width, height)
+        self.pattern_composer.add_tail()
 
-    def save(self, svg_file: Path, export_to: list[str]=[], scale: float=1.0) -> None:
-        self.pattern_composer.save(svg_file, export_to, scale)
+    def save(self, out_file: Path, formats: list[str]=['pdf'], png_scale: float=1.0) -> None:
+        self.pattern_composer.save(out_file, formats, png_scale)
