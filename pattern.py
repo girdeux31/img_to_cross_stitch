@@ -12,26 +12,25 @@ class Pattern:
         """Init object"""
         self.color = color
         self.symbols = symbols
-        self.palette = None
-        self.rgb_2d_list = None
+        self.dmc_palette = None
+        self.dmc_palette = None
         self.width = 0
         self.height = 0
         self.pattern_composer = PatternComposer(color, symbols)
 
-    def process_image(self, img_file: Path, n_colors: int, n_pixels_per_row: int) -> None:
+    def process_image(self, img_file: Path, colors: int, stitches_per_row: int) -> None:
         """Create image, process it (resize, pixelate, quantize), then get palette and pattern"""
         image = Image(img_file)
-        image.process(n_colors, n_pixels_per_row)
-        self.palette = image.get_palette()
-        self.idx_2d_list = image.get_values_as_2d_list()
-        self.width = len(self.idx_2d_list[0])
-        self.height = len(self.idx_2d_list)
+        self.dmc_palette, self.dmc_pattern = image.process(colors, stitches_per_row)
+        # TODO clean pattern
+        self.width = self.dmc_pattern.shape[1]
+        self.height = self.dmc_pattern.shape[0]
 
     def get_palette(self) -> list[dict[str, tuple | str]]:
         """Return image palette with color indexes"""
-        if self.palette is None:
+        if self.dmc_palette is None:
             raise ValueError('To obtain a palette first call process_image method')
-        return self.palette
+        return self.dmc_palette
     
     def generate(self):
         """Generate SVG info"""
@@ -39,12 +38,12 @@ class Pattern:
         height = self.height * SVG_UNIT_SIZE
         self.pattern_composer.add_header(width, height)
         self.pattern_composer.add_arrows(SVG_UNIT_SIZE, width, height)
-        for y_idx, row in enumerate(self.idx_2d_list):
+        for y_idx, row in enumerate(self.dmc_pattern):
             y_pos = (y_idx+1) * SVG_UNIT_SIZE  # +1 allows space for midpoint arrows
-            for x_idx, color_idx in enumerate(row):
+            for x_idx, c_idx in enumerate(row):
                 x_pos = (x_idx+1) * SVG_UNIT_SIZE
-                self.pattern_composer.add_color(self.palette, color_idx, x_pos, y_pos, SVG_UNIT_SIZE)
-                self.pattern_composer.add_symbol(color_idx, x_pos, y_pos, SVG_UNIT_SIZE)
+                self.pattern_composer.add_color(self.dmc_palette, c_idx, x_pos, y_pos, SVG_UNIT_SIZE)
+                self.pattern_composer.add_symbol(c_idx, x_pos, y_pos, SVG_UNIT_SIZE)
         self.pattern_composer.add_gridlines(SVG_UNIT_SIZE, width, height)
         self.pattern_composer.add_tail()
 

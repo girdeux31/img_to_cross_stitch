@@ -1,11 +1,14 @@
+from math import dist
 from pathlib import Path
 
+import numpy as np
 from PIL import Image as PILImage
 
 from dmc import DMC
 
 RESIZE_WIDTH  = 1000
 MASK_SIZE = 1
+SIMILAR_COLOR_THRESHOLD = 30
 
 
 class Image:
@@ -14,6 +17,7 @@ class Image:
         """"""
         self.img_file = img_file
         self.pil_image = self._import_image(img_file)  # pil_image is always width,height / cols,rows / x,y
+        self.dmc_palette = None
 
     @property
     def width(self) -> int:
@@ -30,31 +34,79 @@ class Image:
             raise FileNotFoundError(f'File \'{img_file}\' not found')
         return PILImage.open(img_file).convert('RGB')  # make sure to read it in RGB mode
 
-    def _resize(self) -> None:
-        """Resize image as (res_cols,res_rows,rgb)"""
-        resize_height = int(RESIZE_WIDTH * self.height / self.width)
-        self.pil_image = self.pil_image.resize((RESIZE_WIDTH, resize_height), PILImage.NEAREST)
-    
-    def _pixelate(self, n_pixels_per_row: int) -> None:
-        """Resize image as (pix_cols,pix_rows,rgb)"""
-        dmc = DMC()
-        pixel_size = int(RESIZE_WIDTH / int(n_pixels_per_row))
-        rgb_2d_list = self.get_values_as_2d_list(step=pixel_size)
-        n_rows, n_cols = (len(rgb_2d_list[0]), len(rgb_2d_list))  # rows, columns
-        rgb_2d_list = [
-            [
-                dmc.get_most_similar_rgb_by_rgb(rgb_2d_list[y][x]) 
-                for x in range(0, n_rows)
-            ]
-            for y in range(0, n_cols)
-        ]
-        
-        self.pil_image = PILImage.new('RGB', (n_rows, n_cols))
-        self.pil_image.putdata([rgb for row in rgb_2d_list for rgb in row])
+    def _resize(self, stitches_per_row: int) -> None:
+        """Resize image so each pixel is a stitch (equivalent to pixelate), 
+        output image is (stitches_cols,stitches_rows,rgb)"""
+        pixel_size = self.width // stitches_per_row
+        stitches_per_col = self.height // pixel_size
+        self.pil_image = self.pil_image.resize(
+            (stitches_per_row, stitches_per_col),
+            resample=PILImage.Resampling.NEAREST,  # or LANCZOS
+        )
 
-    def _quantize(self, n_colors: int) -> None:
-        """Resize image as (pix_cols,pix_rows,color_idx)"""
-        self.pil_image = self.pil_image.convert('P', palette=PILImage.ADAPTIVE, colors=n_colors)
+    def _quantize(self, dmc_palette_2d: list[tuple[int]]) -> None:
+        """Assign a color index to each pixel, only n colors are used, 
+        output image is (new_cols,new_rows) where each element is a color index"""
+        dmc_palette_1d = [value for rgb in dmc_palette_2d for value in rgb]
+        dmc_palette_img = PILImage.new("P", (1, 1))  # create an image 1x1 just to put the palette on
+        dmc_palette_img.putpalette(dmc_palette_1d)
+        self.pil_image = self.pil_image.quantize(
+            palette=dmc_palette_img,
+            dither=PILImage.Dither.NONE,
+        )
+
+    def _get_dmc_palette(self, colors: int) -> list[tuple[int]]:
+        """Get a list of dmc colors most used in image"""
+        dmc = DMC()
+        dmc_palette = []
+        predominant_rgbs = self._get_predominant_colors(colors)
+        for rgb in predominant_rgbs:
+            dmc_rgb = dmc.get_most_similar_rgb_by_rgb(rgb)
+            dmc_palette.append(dmc_rgb)
+        return dmc_palette
+
+    def _get_predominant_colors(self, colors: int) -> list[tuple[int]]:
+        """Get a list of colors most used in image"""
+        count_rgbs = self.pil_image.getcolors(maxcolors=self.width*self.height)
+        count_rgbs.sort(reverse=True) # sort by count
+        img_rbgs = [c_rgb[1] for c_rgb in count_rgbs]
+        output_rgbs = []
+        for base_rgb in img_rbgs:
+            if all(dist(base_rgb, rgb) >= SIMILAR_COLOR_THRESHOLD for rgb in output_rgbs):
+                output_rgbs.append(base_rgb)
+        return output_rgbs[:colors]  # return only the n most predominant colors
+
+    def _get_dmc_pattern(self) -> np.ndarray[int]:
+        """Convert the image into a np array"""
+        return np.array(self.pil_image)
+    
+    def process(self, colors: int, stitches_per_row: int):
+        """Process image:
+        1. Resize image to be stitches_per_row x stitches_per_column
+        2. Compute the dmc palette based on the predominant image colors
+        3. Quantize the image with n dmc colors
+        4. Convert the image to a np array"""
+        self._resize(stitches_per_row)
+        # self.show('After resize')
+        dmc_palette = self._get_dmc_palette(colors)
+        self._quantize(dmc_palette)
+        # self.show('After quantize')
+        dcm_pattern = self._get_dmc_pattern()
+        return dmc_palette, dcm_pattern
+
+    # def show(self, title):
+    #     import matplotlib.pyplot as plt
+    #     data = np.array(self.pil_image)
+    #     plt.title(title)
+    #     plt.imshow(data)
+    #     plt.show()
+        
+
+
+
+
+
+
 
     def _clean(self) -> None:
         # TODO move to pattern?
@@ -83,42 +135,3 @@ class Image:
 
         return neighbors
 
-    def process(self, n_colors: int, n_pixels_per_row: int):
-        self._resize()
-        self._pixelate(n_pixels_per_row)
-        self._quantize(n_colors)
-
-    def get_palette(self) -> list[dict[str, tuple | str]]:
-
-        if self.pil_image.mode != 'P':
-            raise ValueError('To obtain a palette first quantize the image with _quantize method')
-        
-        dmc = DMC()
-        palette_list = []
-        palette = self.pil_image.getpalette()
-        palette = tuple(palette[idx:idx+3] for idx in range(0, len(palette), 3))
-        idx_2d_list = self.get_values_as_2d_list()
-        for c_idx in range(0, len(palette)):
-            rgb = palette[c_idx]
-            code = dmc.get_most_similar_code_by_rgb(rgb, corrected=True)
-            name = dmc.get_color_name_by_code(code)
-            stitches = len([idx for row in idx_2d_list for idx in row if c_idx == idx])
-            palette_list.append(
-                {
-                    'rgb': rgb,
-                    'code': code,
-                    'name': name,
-                    'stitches': stitches,
-                }
-            )
-
-        return palette_list
-
-    def get_values_as_2d_list(self, step: int=1) -> list[list[tuple | int]]:
-        """Get image values as a 2d list, either rgb or color index values"""
-        return [
-            [
-                self.pil_image.getpixel((x, y)) 
-                for x in range(0, self.width, step)
-            ] for y in range(0, self.height, step)
-        ]

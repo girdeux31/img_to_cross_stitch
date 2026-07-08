@@ -72,7 +72,7 @@ class PatternComposer(SVGComposer):
     
     def add_color(self, palette: list[dict[str, tuple | str]], idx: int, x: int, y: int, size: int) -> None:
         """Add colors as "pixels" """
-        r, g, b = palette[idx]['rgb'] if self.color else (255, 255, 255)
+        r, g, b = palette[idx] if self.color else (255, 255, 255)
         style = {
             'fill': f'rgb({r},{g},{b})',
             'stroke': 'none',

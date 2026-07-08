@@ -30,7 +30,8 @@ class DMC:
 
         return dmc_dict
 
-    def _euclidean_distance(self, c1: tuple[int], c2: tuple[int], corrected: bool) -> float:
+    @staticmethod
+    def _euclidean_distance(c1: tuple[int], c2: tuple[int], corrected: bool) -> float:
         """Compute euclidean distance between two RGB colors w or wo 'correction'"""
         r1, g1, b1 = c1
         r2, g2, b2 = c2

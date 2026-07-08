@@ -14,17 +14,20 @@ if __name__ == '__main__':
     #     sys.exit(0)
 
     # input_file = Path(sys.argv[1])       # input file name, has to be a jpg
-    # n_colors = int(sys.argv[2])    # number of colors to use in the pattern
-    # n_stitches_per_row = int(sys.argv[3])   # stitch count, number of stitches in x axis
+    # colors = int(sys.argv[2])    # number of colors to use in the pattern
+    # stitches_per_row = int(sys.argv[3])   # stitch count, number of stitches in x axis
 
     # Just for debugging
     input_file = Path('examples/bird.jpg')
-    n_colors = 3
-    n_stitches_per_row = 50
+    colors = 3
+    stitches_per_row = 50
     scale = 2.0
 
+    # TODO: check if stitches_per_row is more then pixels in row or column
     if not input_file.exists():
         raise FileNotFoundError(f'File \'{input_file}\' not found')
+    if not 2 <= colors <= 256:
+        raise ValueError('Parameter \'colors\' must be in range [2, 256]')
 
     # Generate file paths
 
@@ -34,12 +37,12 @@ if __name__ == '__main__':
     # Generate pattern svg
 
     pattern = Pattern(color=True, symbols=True)
-    pattern.process_image(input_file, n_colors, n_stitches_per_row)
+    pattern.process_image(input_file, colors, stitches_per_row)
     pattern.generate()
     pattern.save(out_pattern_file, formats=['svg', 'png', 'pdf'], png_scale=scale)
 
-    # Generate legend svg
+    # # Generate legend svg
 
     legend = Legend(color=True, symbols=True)
-    legend.generate(pattern.get_palette())
+    legend.generate(pattern)
     legend.save(out_legend_file)
