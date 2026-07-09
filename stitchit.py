@@ -1,9 +1,19 @@
 import sys
+from warnings import warn
 from pathlib import Path
 
 from legend import Legend
 from pattern import Pattern
 
+MAX_STITCHES_PER_ROW_RECOMMENDED = 125
+
+
+# TODO:
+#  1. average pixel colors "by hand"
+#  2. user arguments: codes_wo_symbols, backstich_codes
+#  3. help function
+#  4. backstitch function
+#  5. change readme
 
 if __name__ == '__main__':
 
@@ -20,14 +30,28 @@ if __name__ == '__main__':
     # Just for debugging
     input_file = Path('examples/bird.jpg')
     colors = 3
-    stitches_per_row = 50
+    stitches_per_row = 60  # FIX there is one less stitch in output
     scale = 2.0
 
-    # TODO: check if stitches_per_row is more then pixels in row or column
+    # input_file = Path('examples/ita.jpg')
+    # colors = 3
+    # stitches_per_row = 100
+    # scale = 2.0
+
+    # input_file = Path('examples/waves.jpg')
+    # colors = 10
+    # stitches_per_row = 140
+    # scale = 1.0
+
     if not input_file.exists():
         raise FileNotFoundError(f'File \'{input_file}\' not found')
     if not 2 <= colors <= 256:
         raise ValueError('Parameter \'colors\' must be in range [2, 256]')
+    if stitches_per_row > MAX_STITCHES_PER_ROW_RECOMMENDED:
+        warn(
+            f'Parameter \'stitches_per_row\' is over the recommended limit of {MAX_STITCHES_PER_ROW_RECOMMENDED}, '
+            f'this make take some time'
+        )
 
     # Generate file paths
 
@@ -41,7 +65,7 @@ if __name__ == '__main__':
     pattern.generate()
     pattern.save(out_pattern_file, formats=['svg', 'png', 'pdf'], png_scale=scale)
 
-    # # Generate legend svg
+    # Generate legend svg
 
     legend = Legend(color=True, symbols=True)
     legend.generate(pattern)

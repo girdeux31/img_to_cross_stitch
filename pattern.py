@@ -22,7 +22,6 @@ class Pattern:
         """Create image, process it (resize, pixelate, quantize), then get palette and pattern"""
         image = Image(img_file)
         self.dmc_palette, self.dmc_pattern = image.process(colors, stitches_per_row)
-        # TODO clean pattern
         self.width = self.dmc_pattern.shape[1]
         self.height = self.dmc_pattern.shape[0]
 
@@ -38,7 +37,7 @@ class Pattern:
         height = self.height * SVG_UNIT_SIZE
         self.pattern_composer.add_header(width, height)
         self.pattern_composer.add_arrows(SVG_UNIT_SIZE, width, height)
-        for y_idx, row in enumerate(self.dmc_pattern):
+        for y_idx, row in enumerate(self.dmc_pattern):  # TODO: these loops take a long time for stitches_per_row > 100
             y_pos = (y_idx+1) * SVG_UNIT_SIZE  # +1 allows space for midpoint arrows
             for x_idx, c_idx in enumerate(row):
                 x_pos = (x_idx+1) * SVG_UNIT_SIZE
